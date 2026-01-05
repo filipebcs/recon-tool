@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Recon Report - {{ domain }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #fafafa;
+            color: #222;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #003366;
+        }
+
+        .summary {
+            background: #eef5ff;
+            padding: 15px;
+            border-left: 5px solid #003366;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        th {
+            background: #f0f0f0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #ddd;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+
+        .badge-level {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .badge-login {
+            background: #e0f0ff;
+            color: #003366;
+            font-weight: bold;
+            border-radius: 6px;
+            padding: 3px 6px;
+            margin-left: 5px;
+            font-size: 11px;
+        }
+
+        .level-CRITICAL {
+            background: #ffd6d6;
+            color: #7a0000;
+        }
+
+        .level-HIGH {
+            background: #ffe6cc;
+            color: #7a3b00;
+        }
+
+        .level-MEDIUM {
+            background: #fff3bf;
+            color: #6b5b00;
+        }
+
+        .level-LOW {
+            background: #e6ffed;
+            color: #0b5a2a;
+        }
+
+        .mono {
+            font-family: Consolas, monospace;
+        }
+
+        .small {
+            font-size: 12px;
+            color: #444;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Reconnaissance Report</h1>
+    <p><strong>Target:</strong> {{ domain }}</p>
+    <p><strong>Generated:</strong> {{ timestamp }}</p>
+
+    <h2>Executive Summary</h2>
+    <div class="summary">
+        <ul>
+            <li><strong>Total subdomains:</strong> {{ summary.total_subdomains }}</li>
+            <li><strong>Passive subdomains:</strong> {{ summary.passive_subdomains }}</li>
+            <li><strong>Active subdomains:</strong> {{ summary.active_subdomains }}</li>
+            <li>
+                <strong>Risk levels (C / H / M / L):</strong>
+                {{ summary.critical }} /
+                {{ summary.high }} /
+                {{ summary.medium }} /
+                {{ summary.low }}
+            </li>
+        </ul>
+    </div>
+
+    <h2>Prioritized Targets (Risk Scoring)</h2>
+
+    <table id="risk-table">
+        <thead>
+            <tr>
+                <th>Subdomain</th>
+                <th>Origin</th>
+                <th>Score</th>
+                <th>Level</th>
+                <th>Signals</th>
+                <th>Technologies</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in subdomains %}
+            <tr>
+                <td class="mono">
+                    <a href="https://{{ sub.name }}" target="_blank">
+                        {{ sub.name }}
+                        {% if "login_detected" in sub.signals %}
+                        <span class="badge-login">LOGIN</span>
+                        {% endif %}
+                    </a>
+                </td>
+
+                <td>{{ sub.origin }}</td>
+
+                <td><strong>{{ sub.score }}</strong></td>
+
+                <td>
+                    <span class="badge-level level-{{ sub.level }}">
+                        {{ sub.level }}
+                    </span>
+                </td>
+
+                <td class="small">
+                    {% for sig in sub.signals %}
+                    {% if sig == "login_detected" %}
+                    <span class="badge badge-login">LOGIN</span>
+                    {% else %}
+                    <span class="badge">{{ sig }}</span>
+                    {% endif %}
+                    {% endfor %}
+                </td>
+
+                <td>
+                    {% if sub.technologies %}
+                    {% for tech in sub.technologies %}
+                    <span class="badge">{{ tech | upper }}</span>
+                    {% endfor %}
+                    {% else %}
+                    <span class="small">no fingerprint</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Shodan</h2>
+    {% if shodan.found %}
+    <ul>
+        <li><strong>Organization:</strong> {{ shodan.data.organization }}</li>
+        <li><strong>ISP:</strong> {{ shodan.data.isp }}</li>
+        <li><strong>Open Ports:</strong> {{ shodan.data.ports }}</li>
+    </ul>
+    {% else %}
+    <p>No Shodan data available.</p>
+    {% endif %}
+
+    <hr>
+    <p><em>Generated by recon-tool</em></p>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const table = document.getElementById("risk-table");
+            if (!table) return;
+
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.rows);
+
+            rows.sort((a, b) => {
+                const scoreA = parseInt(a.cells[2].innerText, 10);
+                const scoreB = parseInt(b.cells[2].innerText, 10);
+                return scoreB - scoreA;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    </script>
+
+</body>
+
+</html>
