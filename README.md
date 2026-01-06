@@ -130,47 +130,51 @@ Cada subdomínio recebe:
 
 ## 🗂 Estrutura do Projeto
 
+## 🗂 Estrutura do Projeto
+
+```text
 recon-tool/
 │
 ├── recon_tool/
-│ ├── core/
-│ │ ├── domain.py
-│ │ ├── dns.py
-│ │ ├── subdomains.py
-│ │ ├── passive_subdomains.py
-│ │ ├── http.py
-│ │ ├── tech.py
-│ │ ├── shodan.py
-│ │ └── scoring.py
-│ │
-│ ├── reports/
-│ │ ├── html.py
-│ │ ├── markdown.py
-│ │ └── templates/
-│ │ └── report.html
-│ │
-│ ├── utils/
-│ │ ├── logger.py
-│ │ ├── concurrency.py
-│ │ └── wordlist.py
-│ │
-│ ├── main.py
-│ └── main.py
+│   ├── core/
+│   │   ├── domain.py
+│   │   ├── dns.py
+│   │   ├── subdomains.py
+│   │   ├── passive_subdomains.py
+│   │   ├── http.py
+│   │   ├── tech.py
+│   │   ├── shodan.py
+│   │   └── scoring.py
+│   │
+│   ├── reports/
+│   │   ├── html.py
+│   │   ├── markdown.py
+│   │   └── templates/
+│   │       └── report.html
+│   │
+│   ├── utils/
+│   │   ├── logger.py
+│   │   ├── concurrency.py
+│   │   └── wordlist.py
+│   │
+│   ├── main.py
+│   └── __main__.py
 │
 ├── data/
-│ ├── raw/
-│ └── processed/
+│   ├── raw/
+│   └── processed/
 │
 ├── output/
-│ ├── recon-example_com.json
-│ ├── recon-example_com.md
-│ └── recon-example_com.html
+│   ├── recon-example_com.json
+│   ├── recon-example_com.md
+│   └── recon-example_com.html
 │
 ├── .env
 ├── .gitignore
 ├── pyproject.toml
 ├── poetry.lock
 └── README.md
+```
 
 ---
 
