@@ -20,29 +20,33 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 
-from recon_tool.utils.logger import setup_logger
 from recon_tool.core.domain import collect_domain_info
 from recon_tool.core.dns import collect_dns_info
 from recon_tool.core.subdomains import enumerate_subdomains
 from recon_tool.core.http import http_recon
 from recon_tool.core.tech import fingerprint_technologies_by_subdomain
 from recon_tool.core.shodan import shodan_host_lookup
-from recon_tool.utils.wordlist import load_wordlist
-from recon_tool.utils.targets import export_targets
 from recon_tool.core.passive_subdomains import collect_passive_subdomains
 from recon_tool.core.scoring import score_subdomain
-from recon_tool.report.markdown import generate_markdown_report
-from recon_tool.report.html import generate_html_report
 from recon_tool.core.http_subdomain import http_enrich_subdomain
+
+from recon_tool.utils.wordlist import load_wordlist
+from recon_tool.utils.targets import export_targets
+from recon_tool.utils.naming import normalize_domain
 from recon_tool.utils.concurrency import run_parallel
 from recon_tool.utils.validators import is_valid_hostname
+from recon_tool.utils.logger import setup_logger
+
+from recon_tool.report.markdown import generate_markdown_report
+from recon_tool.report.html import generate_html_report
 
 
 # ---------------------------------------------------------------------
 # Initialization
 # ---------------------------------------------------------------------
 
-load_dotenv()  # Load .env if present
+BASE_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(BASE_DIR / ".env")  # Load .env if present
 
 logger = setup_logger("main")
 
@@ -230,9 +234,12 @@ def main() -> None:
     try:
         recon_data = run_recon(args)
         
-        safe_domain = args.domain.replace(".", "_")
+        safe_domain = normalize_domain(args.domain)
 
-        output_file = OUTPUT_DIR / f"recon-{safe_domain}.json"
+        domain_output_dir = OUTPUT_DIR / safe_domain
+        domain_output_dir.mkdir(parents=True, exist_ok=True)
+
+        output_file = domain_output_dir / f"recon-{safe_domain}.json"
 
         with output_file.open("w", encoding="utf-8") as f:
             json.dump(recon_data, f, indent=2, ensure_ascii=False)
@@ -240,12 +247,12 @@ def main() -> None:
         logger.info(f"Results saved to {output_file}")
         print(f"[+] Recon completed. Output: {output_file}")
 
-        report_path = generate_markdown_report(recon_data, OUTPUT_DIR)
+        report_path = generate_markdown_report(recon_data, domain_output_dir)
         
         logger.info(f"Markdown report saved to {report_path}")
         print(f"[+] Markdown report generated: {report_path}")
         
-        html_path = generate_html_report(recon_data, OUTPUT_DIR)
+        html_path = generate_html_report(recon_data, domain_output_dir)
 
         logger.info(f"HTML report saved to {html_path}")
         print(f"[+] HTML report generated: {html_path}")
@@ -254,8 +261,9 @@ def main() -> None:
         # Export pentest targets (prioritized lists)
         # -------------------------------------------------
         exports = export_targets(
+            domain=args.domain,
             risk_scoring=recon_data.get("risk_scoring", []),
-            output_dir=OUTPUT_DIR,
+            output_dir=domain_output_dir,
         )
 
         for name, path in exports.items():
