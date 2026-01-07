@@ -17,3 +17,6 @@ Thumbs.db
 
 # Output
 output/
+
+# Debugging
+recon_tool/debug_env.py
