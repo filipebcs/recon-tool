@@ -130,8 +130,6 @@ Cada subdomínio recebe:
 
 ## 🗂 Estrutura do Projeto
 
-## 🗂 Estrutura do Projeto
-
 ```text
 recon-tool/
 │
